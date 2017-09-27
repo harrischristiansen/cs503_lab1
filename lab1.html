@@ -1,0 +1,358 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR"
+ content="Mozilla/4.77 [en] (X11; U; SunOS 5.6 i86pc) [Netscape]">
+  <title>Lab 1</title>
+</head>
+<body>
+&nbsp;<br>
+&nbsp;
+<center>
+<h4><font size="+2">CS 503 - Fall 2017</font></h4>
+</center>
+<center>
+<h4><font size="+2">Lab 1: Process Scheduling (100 pts)</font></h4>
+</center>
+<center>
+<p><font size="+2">&nbsp;<b> Due Date: Thursday, Sept. 28, 2017, 11:59PM</b></font></p>
+<hr size="2" width="100%"></center>
+<p></p>
+<p>
+In this lab you will implement a two-level process scheduler and few scheduling policies
+in XINU that will
+avoid <i>starvation</i> of processes and improve load balancing between processes. 
+At the end of this lab you will
+be able to explain the advantages and disadvantages of the scheduling
+policies implemented and evaluated in XINU. 
+<p>Starvation is produced in XINU when we have two or more processes
+eligible
+for execution that have different priorities. The scheduling
+invariant
+in XINU assumes that, at any time, the highest priority process
+eligible
+for CPU service is executing, with round-robin scheduling for processes
+of
+equal priority. Under this scheduling policy, processes with the
+highest
+priority, if ready, will always be executing. 
+As a result, processes with
+lower priority may never receive CPU time. 
+For ease of discussion we call "the set of processes in the ready list
+and
+the current process" as <i>eligible</i> processes.</p>
+
+<p>
+All processes in XINU will be put into one of the two scheduling groups: proportional share group and TS group. 
+Within each group, processes will be scheduled via different scheduling 
+policy. 
+
+When <b><i>resched()</i></b> is invoked, it should decide which group should occupy the CPU at first. Then it picks up a process from this group to run.  In this lab, scheduler  
+should run <b>Aging Scheduler</b> to pick the group. After the group is decided, it should pick up one 
+process in this group via group-specific scheduling policy. Proportional share group should apply <b>Proportional Share Scheduler</b>;
+TS group should apply <b>TS Scheduler</b>. In the following we will introduce the three scheduling policies.
+
+<hr size="2" width="100%">
+<p></p>
+<h3><b>1. Aging Scheduler&nbsp; [20pts]</b></h3>
+
+<p>The scheduling policy for process group scheduling is <b>Aging scheduler</b>. On each
+rescheduling
+operation, the scheduler should count the number of processes from different groups in ready queue (e.g. there are
+ 3 processes from proportional group and 4 processes from TS group in ready queue). It should increases the priority of the groups 
+by their number of processes (priority of proportional group increases by 3 and priority of TS group increases by 4). Then
+it should pick up the group with highest priority. If there are processes only from one group, it just picks up this group 
+directly.
+<h4> Implementation sketch:</h4>
+<p>Each group has an <em> initial priority </em>. By default the priority of those two groups are both 10. And it could be 
+changed via the call to <em>chgprio()</em>.
+Every time the scheduler is called it takes the following steps.</p>
+<ul>
+  <li> If the <em>current</em> process belongs to group A, the priority of group A is set to the <em>
+initial
+priority </em> assigned to it.</li>
+  <li> The priorities of all groups are incremented by the number of proccesses (in that group) in the ready queue. Here you don't count the 
+  <em>current</em> process and <em>null</em> process </li>
+</ul>
+Note that during each call to the scheduler, the complete ready list
+has to be traversed. Also, when both groups have the same priority, choose Proportional Share scheduling policy.</b>
+</p>
+
+<hr size="2" width="100%"><!-- An alternative implementation that avoids this has the following implementation :<ul>
+<li>Decrement the priority of the current process by 1.
+<li> Pick up the highest priority process from among the ready list and the current process.
+<li> check whether the priority of the process selected is 0. If so, then reset the priorities of ALL the processes to their <em> initial priorities </em>.
+</ul>
+-->
+<h3><b>2. Proportional Share Scheduler&nbsp;[40pts]</b></h3>
+<p>Every process in the proportional scheduling group
+has a scheduling parameter called <i>rate</i>.
+In the following, we will assume that all the processes in question
+belong to the proportional scheduling group.
+For a process <i>i</i> let us denote the <i>rate </i>as <i>Ri</i>.
+Every process
+<i>i </i>has a <i>priority value Pi</i>. Initially, all the processes
+start
+with a <i>priority value 0 </i>(<i>Pi</i> = 0). Whenever a
+rescheduling
+occurs, the <i>priority value </i> <i>Pi</i> of the<b> currently</b>
+running
+process is updated as follows</p>
+<p></p>
+<center><b><i>Pi &nbsp; : =&nbsp; Pi + ( t * 100 / Ri )</i> </b> </center>
+<p>
+where <b><i>t</i> </b>is the CPU ticks consumed by
+the process since it was last scheduled. <i>Ri</i> is a percentage
+value
+and takes values between 1 and 100.</p>
+<p>Now the scheduler schedules an eligible process with the <i><b>smallest</b>
+Pi</i>. Whenever a process is scheduled the first time or is scheduled
+after
+blocking, its<i> Pi</i> value is updated as</p>
+<p><b></b></p>
+<center><i><b> Pi := max ( Pi, T )</b></i> </center>
+<p>
+where <i>T</i> is the number of CPU ticks that have
+elapsed since the start of the system.</p>
+<p>Intuitively, you can think of this policy as one that gives the
+processes
+some guarantees about their CPU share. If a process has a rate <i>Ri</i>,
+then it is guaranteed at least <i>Ri</i> percent of CPU time, provided
+the
+sum of all <i>Ri</i> values is less than 100. As the CPU usage of a
+process
+increases, its <i>Pi</i> value also increases depending on its <i>Ri</i>.
+If you have a large <i>Ri</i>, then your <i>Pi</i> increases more
+slowly
+and hence giving you a larger share of the CPU. Thus, <i>Ri</i> can be
+considered
+as a <i>share</i> of the CPU for the process <i>i.</i> <br>
+</p>
+<p>The second formula can
+be intuitively understood from the following example: Consider two
+processes A, B&nbsp; starting at time 0 and
+running continuously with rate 50 and 40 respectively. Let us say that
+another
+process C is created after 100,000 ticks with rate 10. C will
+start
+executing with a <i>priority value</i> of 0 (if the second
+formula
+were not to be applied) and hence will hog the CPU for a very long time
+and
+processes A, B have to wait for long to get the CPU back and would not
+enjoy
+their share of the CPU till all the <i>Pi</i> values level off. On the
+other
+hand, if the process C starts with a <i>priority value</i> 100,000
+instead
+of 0, then it will run only for a short amount of time before yielding
+the
+CPU back to A and B.</p>
+<h4><b>Implementation sketch: </b><br>
+</h4>
+<p align="justify">According to this policy, processes are
+scheduled
+in increasing order of their priority, i.e., a process with the lowest <i>priority
+value Pi</i> will be scheduled first. However, note XINU works in the
+opposite
+way, i.e., a process with the highest priority is scheduled first. In order
+to overcome
+this mismatch, we can maintain an internal variable<i> Pi</i> for every
+process
+which will contain the <i>priority value.</i> Let us denote the XINU
+process
+priority of a process <i>i </i>to be<i> PRIOi</i>. Then <i>PRIOi</i> can
+be calculated as <b><i>PRIOi = MAXINT - Pi</i>. </b>As <i>Pi</i>
+increases, <i>PRIOi</i>
+decreases and the process will get lesser share of CPU.&nbsp;&nbsp;</p>
+<p>To summarize, at every reschedule operation, the proportional share
+scheduler
+does the following:</p>
+<ul>
+  <li>The <i><b>Pi</b></i> value of the current process is modified
+and its <i><b>PRIOi </b></i>value updated. </li>
+  <li> The scheduler chooses for execution the process with the highest
+priority,
+choosing from the processes in the ready list <i>and</i> the current
+process. </li>
+</ul>
+Also, whenever a process is scheduled for the first time or immediately
+after
+blocking, then the <i><b>Pi</b></i> value is changed as indicated
+above and
+the<i><b> PRIOi</b></i> is updated to reflect the change. You need to
+identify
+when and how to change <i><b>Pi</b></i>. Other than using previous method, you can keep track of minimum of <i><b>Pi</b></i>, which requires extra traversals in readylist.<br>
+<br>
+
+<h4><b>Benchmark sketch: </b><br>
+</h4>
+<p> To evaluate Proportional Share Scheduling, you will need to experiment with two situtations : (i) when <i>Ri</i> has the equal rate. (ii) when <i>Ri</i> has the different rates. Also, you should consider when some processes in this group are executed late or are blocked and come back later.
+</p>
+
+
+
+<hr size="2" width="100%">
+<h3><b>3. TS Scheduler&nbsp;[40pts]</b></h3>
+
+<p>
+A TS (timeshare) scheduler attempts to classify processes into CPU-bound
+and I/O-bound categories such that I/O-bound processes can be assigned
+higher priority for increased responsiveness without sacrificing fairness
+(i.e., starving CPU-bound processes). This is so since 
+I/O-bound processes tend to voluntarily 
+relinquish the CPU by issuing blocking system calls before 
+their time quanta has expired.
+</p>
+
+<h4><b>Implementation sketch: </b><br>
+</h4>
+
+<p>
+Implementing a TS scheduler entails two aspects: first, identification
+as I/O- or CPU-bound, and second, adapting process priorities and time quantum.
+For the first step, we will use a simple (but also efficient) criterion,
+namely, whether the current process (if it belongs to
+the TSSCHED class), at the moment 
+<strong><i>resched()</i></strong> 
+is called, voluntarily relinquished the
+CPU or was forcibly interrupted by a clock interrupt handler because
+its time quantum expired. This may be determined inside
+<strong><i>resched()</i></strong> by checking the global
+variable <i>preempt</i>. If a TSSCHED class process volutarily relinquished CPU,
+it is considered I/O-bounded. Otherwise, a process is classified as CPU-bounded process 
+(note that this only
+takes into account the most recent history). After classification, priority 
+and time quantum will be dynamically adjusted based on the classification. 
+The dynamic adjustment will be based on Solaris <a href="disp-table-solaris.txt">UNIX dispatch table</a>. When a process 
+is viewed as IO-bounded process, it gets a higher priority(<i>ts_slpret</i>) but less time quantum(corresponding <i>ts_quantum</i>). If it is considered
+as CPU-bounded prcoess, it gets a lower priority (<i>ts_tqexp</i>) and more time quantum (corresponding <i>ts_quantum</i>). In UNIX dispatch table, please ignore <i>ts_maxwait</i> and <i>ts_lwait</i> columns.
+
+<h4><b>Benchmark sketch: </b><br>
+</h4>
+
+<p>
+To evaluate how well the TS scheduling implementation in XINU
+balances fairness and performance
+of CPU- and I/O-bound processes,
+consider the following three test case scenarios.
+<ol>
+<li>
+<i> All processes are CPU-bound</i>.
+In the first test case, create 6 processes that run the same program
+<i>cpubound()</i>. Put the code of
+<i>cpubound()</i> in a separate file
+<i>cpubound.c</i>. Assign the same initial priority value 1 when calling
+<i>create()</i> from <i>main()</i>.
+The code structure of <i>cpubound()</i> should follow:
+<pre>
+for (i=0; i&lt;LOOP1; i++) {
+  for (j=0; j&lt;LOOP2; j++) {
+    // Insert code that performs memory copy (slow) and/or
+    // ALU operations (fast).
+    // Note: this loop consumes significant CPU cycles.
+  }
+  // Using kprintf print the pid followed the outer loop count i,
+  // the process's priority and remaining time slice (preempt).
+}
+</pre>
+
+You will need to experiment with different values of <i>LOOP1</i>
+and <i>LOOP2</i> to induce CPU sharing via context switching
+and resultant output that can be easily interpreted for
+gauging your implementation of TS scheduling performance.
+Your runs should be long enough so that you can conclude from the
+CPU share output that the system has reached a "steady state."
+</li>
+<br>
+<li>
+<i> All processes are I/O-bound</i>.
+Follow the same steps as above
+but replace <i>cpubound()</i> by <i>iobound()</i>
+(in <i>iobound.c</i>) which
+has the same code structure as <i>cpubound()</i> except that the
+code in the inner loop (for ALU and memory copy) is replaced by a single
+call to <i>sleepms()</i>. By varying the argument of <i>sleepms()</i>
+you can modulate the degree to which <i>iobound()</i> is prone to
+block and voluntarily relinquish the CPU.
+When testing, use the same sleep time as argument to sleepms() for all
+6 instances of I/O-bound processes.
+</li>
+<br>
+<li>
+<i> Half-and-half: </i>.
+Create 6 processes where half execute
+<i>cpubound()</i> and the other half execute <i>iobound()</i>.
+In the first part of the evaluation, under this mixed workload of
+CPU- and I/O-bound processes, determine if the 3 CPU-bound
+processes --- among themselves --- achieve equal sharing of CPU cycles
+as indicated by the output. Do the same for the 3 I/O-bound
+processes with their sleep time arguments to sleepms() fixed to the
+same value. Evaluate CPU sharing between the two groups of processes ---
+CPU- and I/O-bound
+</li>
+</ol>
+</p>
+
+<b>NOTE: You don't need to submit <i>cpubound.c</i> and <i>iobound.c</i></b>
+</p>
+<hr size="2" width="100%">
+
+<h3><b>4. System call implementation</b></h3>
+<p>
+<b>create(void *funcaddr, uint32 ssize, int group, pri16 priority, ... )</b></p>
+<p>
+Please add a new argument, <em>group</em> to this function (before <em>priority</em>) to this function. <em>group</em> should be either PROPORTIONALSHARE or TSSCHED. 
+And for processes of proportional group, <em>priority</em> is used to define <i>Ri</i>. For processes which created by XINU by default 
+(e.g. main, null), you can put them into either PROPORTIONALSHARE or TSSCHED.
+</p>
+
+<p>
+<b>chgprio(int group, pri16 newprio)</b></p>
+<p>
+You should add this new system call to change the initial priority of groups. Here you could have a look at system call <em>chprio</em> which changes processes' priority. 
+The new group priority will be effective from the next scheduling.
+</p>
+
+<p>
+<b>resched()</b></p>
+<p>
+This system call will be invoked for scheduling a process to run. Most of your work will be done here. So please understand each line of code of this system call before
+you start to implement. <b>One thing to note</b> is that this lab's focus is not in scheduling's efficiency, but its correctness. Therefore, you can share readylist for both scheduling policy.
+</p>
+
+<hr size="2" width="100%">
+
+<h3><b>5. Turnin Instructions</b></h3>
+<p>Turnin instructions for Lab1 code (electronic):</p>
+<ol>
+  <li> Make sure to turn off debugging output. Also, please do not rename xinu-fall2017, or any of its subdirectories.</li>
+  <li> Go to <i>xinu-fall2017/compile</i> directory and do "make
+clean". </li>
+  <li> Go to the directory of which your <i>xinu-fall2017</i>
+directory
+is a subdirectory. (eg) if <i>/homes/XXX/xinu-fall2017</i> is your
+directory structure, goto <i>/homes/XXX</i></li>
+  <li> Submit using the following command:&nbsp;
+    <div align="left">
+    <center><i><b> turnin -c cs503&nbsp; -p lab1&nbsp;xinu-fall2017</b></i>
+    </center>
+    </div>
+  </li>
+  <li> After submitting your files, you may want to check that it's indeed submitted using command:
+    <div align="left">
+    <center><i><b> turnin -v -c cs503 -p lab1</b></i>
+    </center>
+    </div>
+  </li>
+</ol>
+<p></p>
+<p><b><i>&nbsp;&nbsp;&nbsp; You can write code in main.c to test your
+procedures,
+but please note that when we test your programs we will replace the
+main.c
+file. Therefore, do not put any functionality in the main.c file.</i></b>
+</p>
+<hr size="2" width="100%">
