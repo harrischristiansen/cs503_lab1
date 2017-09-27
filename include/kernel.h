@@ -16,7 +16,7 @@ typedef	int32	sid32;		/* semaphore ID				*/
 typedef	int16	qid16;		/* queue ID				*/
 typedef	int32	pid32;		/* process ID				*/
 typedef	int32	did32;		/* device ID				*/
-typedef	int16	pri16;		/* process priority			*/
+typedef	int32	pri16;		/* process priority			*/
 typedef	uint32	umsg32;		/* message passed among processes	*/
 typedef	int32	bpid32;		/* buffer pool ID			*/
 typedef	byte	bool8;		/* Boolean type				*/

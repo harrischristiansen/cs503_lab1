@@ -12,17 +12,12 @@ syscall kputc(byte c)	/* Character to write	*/
 {
 	struct	dentry	*devptr;
 	volatile struct uart_csreg *csrptr;
-	intmask	mask;
-
-	/* Disable interrupts */
-	mask = disable();
 
 	devptr = (struct dentry *) &devtab[CONSOLE];
 	csrptr = (struct uart_csreg *)devptr->dvcsr;
 
 	/* Fail if no console device was found */
 	if (csrptr == NULL) {
-		restore(mask);
 		return SYSERR;
 	}
 
@@ -43,7 +38,6 @@ syscall kputc(byte c)	/* Character to write	*/
 		csrptr->buffer = '\r';
 	}
 
-	restore(mask);
 	return OK;
 }
 
@@ -97,10 +91,15 @@ extern	void	_doprnt(char *, va_list ap, int (*)(int));
  */
 syscall kprintf(char *fmt, ...)
 {
+	/* Disable interrupts */
+	intmask	mask;
+	mask = disable();
+	
 	va_list ap;
-
 	va_start(ap, fmt);
 	_doprnt(fmt, ap, (int (*)(int))kputc);
 	va_end(ap);
+	
+	restore(mask);
 	return OK;
 }
