@@ -1,0 +1,316 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.79 [en] (Win95; U) [Netscape]">
+</head>
+<body>
+
+<center>
+<h2>
+CS 503 - Fall 2017</h2>
+</center>
+
+<center>
+<h1>
+XINU Set-up
+</h1>
+</center>
+
+<h2>
+Objectives:
+</h2>
+The following instructions describe how to:
+<ul>
+<li>Log onto a XINU Lab workstation, download, extract, and compile a copy of the XINU source.</li>
+<li>View the status of existing XINU backends.</li>
+<li>Load a built XINU image onto a XINU backend and successfully boot the image.</li>
+<li>Modify the XINU source code initialize.c which creates
+the first XINU app process that executes function main() which
+is located in system/main.c.</li>
+</ul>
+
+<hr width="100%">
+
+<b>Please read this whole document and make sure you follow all the instructions. In case you are
+stuck, feel free to contact the TA. </b>
+
+<h2>1. XINU Configuration</h2>
+To use XINU, several environment variables must be set. First log onto
+one of the frontends <b>xinu01.cs.purdue.edu</b>, <b>xinu02.cs.purdue.edu,</b> ..., <b>xinu21.cs.purdue.edu</b> which are Linux 
+PCs.
+For remote login see Section 5. 
+To login you should be able to use your career account user and password.  If you have any trouble with 
+your account and its setup, please see the department help pages at <a 
+href='http://www.cs.purdue.edu/help'>http://www.cs.purdue.edu/help</a>. If these pages do not address your particular problem, 
+please use the trouble command from the command line to report the problem.
+
+<p>The following assumes that your shell 
+is bash. The syntax may vary slightly if you use a different shell.
+(Run "echo $0" to determine your current shell.)
+<p>Setting environment variables for XINU:
+<p>&nbsp;&nbsp;&nbsp; 1.&nbsp; 
+Edit <b>.bashrc</b> in your home directory (<b>~/.bashrc</b>) by adding /p/xinu/bin to your path:
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>export PATH=${PATH}:/p/xinu/bin</b>
+<p>&nbsp;&nbsp;&nbsp; 2.&nbsp; Run&nbsp; <b>source&nbsp; ~/.bashrc</b> (or its equivalent) to
+make the change take effect.
+<p>Accessing and untarring XINU tarball source files:
+<ol>
+<li>
+Change to your home directory, if you are not already in it.</li>
+<br>
+<li>Unpack:</li>
+<pre>
+tar zxvf /u/u3/cs503/xinu-fall17/xinu-fall2017.tar.gz
+</pre>
+<p>In your home directory, you will now have a directory called xinu-fall2017.
+The subdirectories under this directory contain source code, header files,
+configuration files, and Makefile for compiling XINU.</p>
+</ol>
+
+
+<hr width="100%">
+
+<h2><b>2. Building XINU</b></h2>
+To compile the XINU kernel which will be loaded and executed on a backend
+machine, run "make" in the <b>compile/</b> directory:
+<pre>
+	% cd xinu-fall2017/compile
+	% make clean
+	% make rebuild
+	% make
+</pre>
+This creates an executable file called <b>xinu</b>.
+
+<br>
+<br>
+
+<hr width="100%">
+
+<h2>3. Running XINU</h2>
+The executable XINU binary runs on a selected backend machine. 
+We have 96 dedicated backends: <b>galileo101.cs.purdue.edu</b>, ..., <b>galileo196.cs.purdue.edu</b>.
+<p>The backends are all <a href="http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html">Intel Galileo</a>
+development boards which run the <a href="http://www.intel.com/content/www/us/en/processors/quark/intel-quark-technologies.html">quark</a>
+system on chip processor.<p>
+<p>
+The backend machines are shared resources. When a backend machine is
+grabbed by a student,
+it is dedicated for use by that student to run his/her version of XINU.
+To see which backends are available for booting XINU, type:
+</p>
+
+<pre><b>% cs-status -c quark</b></pre>
+
+This will show you who is using each backend and how
+long they have been using it. As with all hardware,
+sometimes they fail and may become unavailable until repaired
+by our technical staff.
+<p>
+To boot your copy of XINU on a backend, connect
+to a back-end by issuing the command:
+
+<pre><b>% cs-console [galileo1__]</b></pre>
+With no arguments cs-console will connect you to the first available backend (including broken ones).
+
+<p>
+To load your copy of XINU onto a selected backend:
+<pre><b>(control-@) </b>OR <b>(control-spacebar) </b>&nbsp;&nbsp;&nbsp;&nbsp;//esc to local command-mode
+
+<b>(command-mode) d</b>&nbsp;&nbsp;&nbsp;&nbsp;//download command
+
+<b>file: xinu </b> &nbsp;&nbsp;&nbsp;&nbsp;//tell it to download 'xinu' (this example assumes that you are in the xinu-fall2017/compile directory)
+
+<b>(control-@)</b> OR <b>(control-spacebar)</b>&nbsp;&nbsp;&nbsp;&nbsp;//esc to local command-mode&nbsp;
+
+<b>(command-mode) p</b>&nbsp;&nbsp;&nbsp;&nbsp;//power cycle the backend
+</pre>
+
+After several seconds, XINU should boot with a "Welcome to Xinu!" message that looks something like this:
+<pre>
+Xboot for galileo -- version #1   Tue Aug  2 14:10:24 EDT 2016
+
+Ethernet Link is Up
+MAC address is 98:4f:ee:00:0b:45
+[XBOOT] Loading Xinu...
+
+
+Xinu for galileo -- version #1  (XXX)  Sun Jan 22 13:47:32 EST 2017
+
+Ethernet Link is Up
+MAC address is 98:4f:ee:00:0b:45
+ 250088992 bytes of free memory.  Free list:
+           [0x001591E0 to 0x0EFD8FFF]
+           [0x0FDEF000 to 0x0FDEFFFF]
+    102701 bytes of Xinu code.
+           [0x00100000 to 0x0011912C]
+    132872 bytes of data.
+           [0x0011CBA0 to 0x0013D2A7]
+
+Obtained IP address  128.10.136.190   (0x800a88be)
+
+
+------------------------------------------
+   __    __   _____    _   _    _    _
+   \ \  / /  |__ __|  | \ | |  | |  | |
+    \ \/ /     | |    |  \| |  | |  | |
+    / /\ \    _| |_   | \   |  | |  | |
+   / /  \ \  |     |  | | \ |  \  --  /
+   --    --   -----    -   -     ----
+------------------------------------------
+
+
+Welcome to Xinu!
+
+
+xsh $
+</pre>
+
+<p>
+
+To disconnect and free up the backend:
+
+<pre>
+<b>(control-@)</b> OR <b>(control-spacebar)</b>
+
+<b>(command-mode) p</b>&nbsp;&nbsp;&nbsp;&nbsp;//power cycle the backend
+
+<b>(control-@)</b> OR <b>(control-spacebar)</b>
+
+<b>(command-mode) q</b>&nbsp;&nbsp;&nbsp;&nbsp;//quit
+
+</pre>
+
+<p><font size=+1><b><font color="#CC0000">NOTE</font></b><font color="#990000">:</font></font>
+<p><font color="#CC0000"><font size=+1>Please do not leave a running
+copy of your XINU on a backend. This will prevent others from using that
+backend.</font></font>
+
+<br>
+
+<hr width="100%">
+
+<h2>4. Troubleshooting</h2>
+
+<ol>
+<li>We only show the mapping from bash to tcsh. If you use other shell types, please contact the TAs. The mapping is as follows:
+Edit <b>.cshrc</b> instead of <b>.bashrc</b>. 
+Add a line <b>setenv PATH ${PATH}:/p/xinu/bin</b> instead of <b>export PATH=${PATH}:/p/xinu/bin</b>. 
+Run <b>tcsh</b> instead of <b>source .bashrc</b>.
+<li>Try to figure out what's going on by yourself. Oftentimes the steps
+described above were not precisely followed.
+<li>When your XINU executable misbehaves or crashes 
+(i.e., does not do what you intended
+when programming the kernel) then debug the problem(s) and try again.
+Since your version of the XINU kernel runs over dedicated hardware,
+you are in full control. 
+That is, there are no hidden side effects introduced by other
+software layers that you are not privy to.  
+By the same token, everything rests on your shoulders.
+<li>If you get repeatedly stuck with "Booting XINU on ... " 
+please contact the TAs.
+<li>If you are not able to get a free backend, please contact the
+TAs.
+</ol>
+
+<hr width="100%">
+
+<h2>5. Remote Login</h2>
+<p>
+Use of the backends is limited to implementing, testing, and
+evaluating lab assignments of CS 503. To access the backends, you don't
+have to be physically present in the XINU lab but may remote login
+using ssh to one of the lab's frontend machines. 
+</p>
+
+<hr width="100%">
+
+<h2>6. An Example App: XINU Shell</h2>
+<p>
+By default, when XINU boots up, it runs a shell (xsh).  To view all the
+usable shell commands, run the help command:
+</p>
+<pre>
+	xsh $ help
+
+	shell commands are:
+
+	argecho      date         help         netinfo      udp          ?
+	arp          devdump      kill         ping         udpecho
+	cat          echo         memdump      ps           udpeserver
+	clear        exit         memstat      sleep        uptime
+</pre>
+<p>
+Take a moment to run some shell commands and view their output.  
+Specifically make sure you run the ps command which lists 
+information about running processes.
+</p>
+<pre>
+	xsh $ ps
+	Pid Name             State Prio Ppid Stack Base Stack Ptr  Stack Size
+	--- ---------------- ----- ---- ---- ---------- ---------- ----------
+	  0 prnull           ready    0    0 0x0EFDEFFC 0x0EFDEEB0     8192
+	  1 rdsproc          susp   200    0 0x0EFDCFFC 0x0EFDCFC8    16384
+	  2 ipout            wait   500    0 0x0EFD8FFC 0x0EFD8F40     8192
+	  3 netin            wait   500    0 0x0EFD6FFC 0x0EFD6EE0     8192
+	  5 Main process     recv    20    4 0x0EFC4FFC 0x0EFC4F64    65536
+	  6 shell            recv    50    5 0x0EFB4FFC 0x0EFB4C7C     8192
+	  8 ps               curr    20    6 0x0EFD4FFC 0x0EFD4DC8     8192
+</pre>
+<p>
+Here you can see the several pieces of information for all processes 
+currently running.  The name gives some detail about what the process 
+is intended for.  XINU always contains a special process with process 
+identifier (pid) 0 called the null process (or prnull).  This process 
+is the first process created by XINU and is always ready to execute.  
+Unlike other processes, prnull is handcrafted without using create().
+The inclusion of this process ensures that there is always something 
+for XINU to execute even if all other processes have finished or are 
+waiting for something. By default, UNIX/Linux and Windows have similar
+null or idle processes.
+</p>
+
+<h2>7. Running Other Apps</h2>
+
+<p>
+Instead of creating a shell process, in the labs you will create
+app processes which will test/benchmark your XINU kernel modifications.
+For example, the "Hello World!" message may be generated by a new
+process running function myprocess()
+</p>
+<pre>
+	void myprocess(void) {
+		kprintf("Hello world again!\n");
+	}
+</pre>
+instead of code inserted into main().
+<p>
+Just remove the code in main.c that creates a shell process and replace it 
+with the following:
+<p>
+<pre>
+	resume(create(myprocess, 4096, 25, "helloworld", 0));
+	while(TRUE) {
+		// Do nothing
+	}
+</pre>
+<p>
+Compile a new XINU image, download it to your XINU backend, and power 
+cycle the backend.
+Once XINU boots up, you should see the message "Hello world again!" printed 
+to the console. How many processes you will create from within main()
+and what code they will execute will depend on the specifics of each lab.
+</p>
+
+<p>
+  If you insist on adding new functions in a new file rather than in main.c or
+  other existing files, simply do <pre>make rebuild</pre> before any follow-up
+  make.
+</p>
+<p>
+  That being said, in this and following labs, we may have already created files
+  for you to fill code in. In that way it may help simplify the testing/grading
+  process.
+</p>
+
+</body>
+</html>
