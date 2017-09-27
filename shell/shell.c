@@ -24,6 +24,7 @@ const	struct	cmdent	cmdtab[] = {
 	{"ping",	FALSE,	xsh_ping},
 	{"ps",		FALSE,	xsh_ps},
 	{"sleep",	FALSE,	xsh_sleep},
+	{"test",	FALSE,	xsh_test},
 	{"udp",		FALSE,	xsh_udpdump},
 	{"udpecho",	FALSE,	xsh_udpecho},
 	{"udpeserver",	FALSE,	xsh_udpeserver},
