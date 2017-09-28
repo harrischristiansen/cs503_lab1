@@ -173,6 +173,10 @@ static	void	sysinit()
 	/* Count the Null process as the first process in the system */
 
 	prcount = 1;
+	
+	for (i = 0; i < PR_GROUP_COUNT; i++) {
+		pr_group_priority[i] = PR_GROUP_INITIAL;
+	}
 
 	/* Scheduling is not currently blocked */
 

@@ -8,8 +8,10 @@
 
 /* Process Scheduler Group Constants */
 
-#define PROPORTIONALSHARE  	0   /* Proportional Share Scheduler 	*/
-#define TSSCHED   			1   /* Timeshare Scheduler 				*/
+#define PR_GROUP_COUNT		10	/* Number of Process Groups	to create	*/
+#define PR_GROUP_INITIAL	10	/* Initial Priority for Process Groups	*/
+#define PROPORTIONALSHARE  	0   /* Proportional Share Scheduler 		*/
+#define TSSCHED   			1   /* Timeshare Scheduler 					*/
 
 /* Process state constants */
 
@@ -80,3 +82,5 @@ struct procent {			/* Entry in the process table			*/
 extern	struct	procent proctab[];
 extern	int32	prcount;	/* Currently active processes			*/
 extern	pid32	currpid;	/* Currently executing process			*/
+
+extern  pri16 	pr_group_priority[PR_GROUP_COUNT];	/* Process Group Priorities */

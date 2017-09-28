@@ -19,5 +19,5 @@ September 2017
 - [X] Proportional Share Scheduler (40%)
 - [X] Timeshare Scheduler (40%)
 - [X] System Call - create
-- [ ] System Call - chgprio
+- [X] System Call - chgprio
 - [ ] System Call - resched
