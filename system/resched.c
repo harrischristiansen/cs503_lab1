@@ -8,12 +8,7 @@ bool8 classifyProcess(struct procent *prptr)
 {
 	// Determine Process Classification
 	bool8 oldClass = prptr->pr_class;
-	//if (prptr->prstate==PR_SLEEP || prptr->prstate==PR_RECV) {
-	//	prptr->pr_class = PR_IO;
-	//} else {
-	//	prptr->pr_class = PR_CPU;
-	//}
-	if (preempt == QUANTUM) { // Process used all available time
+	if (preempt <= 0 || prptr->prstate == PR_CURR || prptr->prstate == PR_READY) { // Process is not IO blocked
 		prptr->pr_class = PR_CPU;
 	} else {
 		prptr->pr_class = PR_IO;

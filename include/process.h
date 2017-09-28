@@ -57,7 +57,7 @@ struct procent {		/* Entry in the process table			*/
 	bool8	prhasmsg;	/* Nonzero iff msg is valid				*/
 	int16	prdesc[NDESC];	/* Device descriptors for process	*/
 	
-	uint32  pr_cputime; /* Process total CPU time in ms       	*/
+	uint32  pr_cputime; /* Process total CPU time in clk count       	*/
 	uint32  pr_tsready; /* Timestamp of last PR_READY   		*/
 	
 	bool8   pr_class;   /* CPU/IO Process Classification (0=CPU, 1=IO)    */
