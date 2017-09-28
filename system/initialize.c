@@ -85,7 +85,7 @@ void	nulluser()
 
 	/* Create a process to finish startup and start main */
 
-	resume(create((void *)startup, INITSTK, INITPRIO,
+	resume(create((void *)startup, INITSTK, TSSCHED, INITPRIO,
 					"Startup process", 0, NULL));
 
 	/* Become the Null process (i.e., guarantee that the CPU has	*/
@@ -130,7 +130,7 @@ local process	startup(void)
 
 	/* Create a process to execute function main() */
 
-	resume(create((void *)main, INITSTK, INITPRIO,
+	resume(create((void *)main, INITSTK, TSSCHED, INITPRIO,
 					"Main process", 0, NULL));
 
 	/* Startup process exits at this point */
@@ -182,6 +182,7 @@ static	void	sysinit()
 
 	for (i = 0; i < NPROC; i++) {
 		prptr = &proctab[i];
+		prptr->pr_group = TSSCHED;
 		prptr->prstate = PR_FREE;
 		prptr->prname[0] = NULLCH;
 		prptr->prstkbase = NULL;
@@ -193,6 +194,7 @@ static	void	sysinit()
 	/* Initialize the Null process entry */	
 
 	prptr = &proctab[NULLPROC];
+	prptr->pr_group = TSSCHED;
 	prptr->prstate = PR_CURR;
 	prptr->prprio = -1;
 	prptr->pr_quantum = QUANTUM;

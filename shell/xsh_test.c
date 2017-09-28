@@ -59,10 +59,10 @@ void sample_ts_test() {
 	resched_cntl(DEFER_START);
     for (i = 0; i < 6; i++) {
         if (i % 2 == 0) {
-            resume(create(process_cpu, 1024, 20, "cpu-intense", 0));
+            resume(create(process_cpu, 1024, TSSCHED, 20, "cpu-intense", 0));
         }
         else {
-            resume(create(process_io_single, 1024, 20, "io-intense", 1, 32));
+            resume(create(process_io_single, 1024, TSSCHED, 20, "io-intense", 1, 32));
         }
     }
     resched_cntl(DEFER_STOP);
@@ -91,10 +91,10 @@ shellcmd xsh_test(int nargs, char *args[])
 	
 	int i;
 	for (i = 0; i < num_cpu; i++) {
-		resume(create(process_cpu, 1024, INITPRIO, "CPU-intense", 0, NULL));
+		resume(create(process_cpu, 1024, TSSCHED, INITPRIO, "CPU-intense", 0, NULL));
 	}
 	for (i = 0; i < num_io; i++) {
-		resume(create(process_io_multiple, 1024, INITPRIO, "IO-intense", 0, NULL));
+		resume(create(process_io_multiple, 1024, TSSCHED, INITPRIO, "IO-intense", 0, NULL));
 	}
 	
 	

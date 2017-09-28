@@ -4,17 +4,21 @@
 
 #ifndef NPROC
 #define	NPROC		8
-#endif		
+#endif
+
+/* Process Scheduler Group Constants */
+#define PROPORTIONALSHARE  	0   /* Proportional Share Scheduler */
+#define TSSCHED   			1   /* Timeshare Scheduler 			*/
 
 /* Process state constants */
 
-#define	PR_FREE		0	/* Process table entry is unused	*/
-#define	PR_CURR		1	/* Process is currently running		*/
-#define	PR_READY	2	/* Process is on ready queue		*/
-#define	PR_RECV		3	/* Process waiting for message		*/
-#define	PR_SLEEP	4	/* Process is sleeping			*/
-#define	PR_SUSP		5	/* Process is suspended			*/
-#define	PR_WAIT		6	/* Process is on semaphore queue	*/
+#define	PR_FREE		0	/* Process table entry is unused		*/
+#define	PR_CURR		1	/* Process is currently running			*/
+#define	PR_READY	2	/* Process is on ready queue			*/
+#define	PR_RECV		3	/* Process waiting for message			*/
+#define	PR_SLEEP	4	/* Process is sleeping					*/
+#define	PR_SUSP		5	/* Process is suspended					*/
+#define	PR_WAIT		6	/* Process is on semaphore queue		*/
 #define	PR_RECTIM	7	/* Process is receiving with timeout	*/
 
 /* Process Classification Constants */
@@ -29,7 +33,7 @@
 /* Process initialization constants */
 
 #define	INITSTK		65536	/* Initial process stack size		*/
-#define	INITPRIO	20	/* Initial process priority		*/
+#define	INITPRIO	20	/* Initial process priority				*/
 #define	INITRET		userret	/* Address to which process returns	*/
 
 /* Inline code to check process ID (assumes interrupts are disabled)	*/
@@ -45,6 +49,7 @@
 /* Definition of the process table (multiple of 32 bits) */
 
 struct procent {		/* Entry in the process table			*/
+	int32	pr_group;	/* Scheduler Group for process			*/
 	uint16	prstate;	/* Process state: PR_CURR, etc.			*/
 	pri16	prprio;		/* Process priority						*/
 	uint32  pr_quantum; /* Process classified level quantum		*/

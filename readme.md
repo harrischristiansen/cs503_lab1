@@ -18,6 +18,6 @@ September 2017
 - [ ] Aging Scheduler (20%)
 - [ ] Proportional Share Scheduler (40%)
 - [X] Timeshare Scheduler (40%)
-- [ ] System Call - create
+- [X] System Call - create
 - [ ] System Call - chgprio
 - [ ] System Call - resched
