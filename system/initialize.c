@@ -188,6 +188,8 @@ static	void	sysinit()
 		prptr->prstkbase = NULL;
 		prptr->prprio = 0;
 		prptr->pr_cputime = 0;
+		prptr->pr_cputimecurrent = 0;
+		prptr->pr_pi = 0;
 	}
 
 	/* Initialize the Null process entry */	
@@ -201,6 +203,8 @@ static	void	sysinit()
 	prptr->prstklen = NULLSTK;
 	prptr->prstkptr = 0;
 	prptr->pr_cputime = 0;
+	prptr->pr_cputimecurrent = 0;
+	prptr->pr_pi = 0;
 	currpid = NULLPROC;
 	
 	/* Initialize semaphores */

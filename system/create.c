@@ -42,7 +42,17 @@ pid32	create(
 	/* Initialize process table entry for new process */
 	prptr->pr_group = group;
 	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
-	prptr->prprio = priority;
+	if (group == PROPORTIONALSHARE) {
+		prptr->pr_ri = priority;
+		if (priority > 100) {
+			prptr->pr_ri = 100;
+		} else if (priority < 0) {
+			prptr->pr_ri = 0;
+		}
+		prptr->prprio = 2147483646;
+	} else { // Group = TSSCHED
+		prptr->prprio = priority;
+	}
 	prptr->prstkbase = (char *)saddr;
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
@@ -52,7 +62,9 @@ pid32	create(
 	prptr->prparent = (pid32)getpid();
 	prptr->prhasmsg = FALSE;
 	prptr->pr_cputime = 0;
+	prptr->pr_cputimecurrent = 0;
 	prptr->pr_class = PR_CPU;
+	prptr->pr_pi = 0;
 
 	/* Set up stdin, stdout, and stderr descriptors for the shell	*/
 	prptr->prdesc[0] = CONSOLE;

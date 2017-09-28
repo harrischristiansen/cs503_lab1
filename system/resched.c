@@ -4,6 +4,35 @@
 
 struct	defer	Defer;
 
+// ======================================== Proportional Share Scheduler ======================================== //
+
+int32 calculatePi(int32 oldPi, int32 ticks, int32 valueRi)
+{
+	return oldPi + (ticks * 100 / valueRi);
+}
+
+int32 validate_pi(int32 valuePi)
+{
+	return (valuePi < clktime*1000) ? valuePi : clktime*1000;
+}
+
+int32 calculatePRIOi(int32 valuePi) {
+	return 2147483646 - valuePi;
+}
+
+void updatePSProcessPriority(struct procent *prptr)
+{
+	if (prptr == &proctab[NULLPROC]) {
+		return;
+	}
+	prptr->pr_pi = calculatePi(prptr->pr_pi, prptr->pr_cputimecurrent, prptr->pr_ri);
+	prptr->prprio = calculatePRIOi(prptr->pr_pi);
+}
+
+
+
+// ======================================== Timeshare Scheduler ======================================== //
+
 const int32 QUANTUM_FOR_LEVEL[] = {200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 20};
 const int32 NEXT_CPU_PRIORITY_FOR_PRIOITY[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49};
 const int32 NEXT_IO_PRIORITY_FOR_PRIOITY[] = {50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 53, 53, 53, 53, 53, 54, 54, 54, 54, 54, 55, 55, 55, 55, 55, 56, 57, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 59};
@@ -21,7 +50,7 @@ bool8 classifyProcess(struct procent *prptr)
 	return oldClass;
 }
 
-void updateProcessPriority(struct procent *prptr)
+void updateTSProcessPriority(struct procent *prptr)
 {
 	if (prptr == &proctab[NULLPROC]) {
 		return;
@@ -31,6 +60,27 @@ void updateProcessPriority(struct procent *prptr)
 		prptr->prprio = NEXT_IO_PRIORITY_FOR_PRIOITY[prptr->prprio];
 	} else {
 		prptr->prprio = NEXT_CPU_PRIORITY_FOR_PRIOITY[prptr->prprio];
+	}
+}
+
+int32 quantumForPriority(int32 priority)
+{
+	if (priority < 0 || priority > 59) {
+		return QUANTUM;
+	}
+	return QUANTUM_FOR_LEVEL[priority];
+}
+
+// ======================================== Quantum ======================================== //
+
+int32 quantumForGroup(struct procent *prptr)
+{
+	if (prptr->pr_group == TSSCHED) {
+		return quantumForPriority(prptr->prprio);
+	} else if (prptr->pr_group == PROPORTIONALSHARE) {
+		return QUANTUM;
+	} else {
+		return QUANTUM;
 	}
 }
 
@@ -56,11 +106,14 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	
 	if (ptold->pr_group == TSSCHED) {
 		classifyProcess(ptold);
-		updateProcessPriority(ptold);
+		updateTSProcessPriority(ptold);
+	} else if (ptold->pr_group == PROPORTIONALSHARE) {
+		updatePSProcessPriority(ptold);
 	}
 
 	if (ptold->prstate == PR_CURR) {  /* Process remains eligible */
 		if (ptold->prprio > firstkey(readylist)) {
+			preempt = quantumForGroup(ptold); /* Reset time slice for process	*/
 			return;
 		}
 
@@ -75,14 +128,10 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	currpid = dequeue(readylist);
 	ptnew = &proctab[currpid];
 	ptnew->prstate = PR_CURR;
-	
-	/* Reset time slice for process	*/
-	if (ptold->pr_group == TSSCHED) {
-		preempt = QUANTUM_FOR_LEVEL[ptnew->prprio];
-	} else if (ptold->pr_group == PROPORTIONALSHARE) {
-		preempt = QUANTUM;
-	}
-	
+	ptnew->pr_cputimecurrent = 0;
+	ptnew->pr_tsscheduled = clktime;
+	preempt = quantumForGroup(ptnew); /* Reset time slice for process	*/
+	ptnew->pr_pi = validate_pi(ptnew->pr_pi);
 	ctxsw(&ptold->prstkptr, &ptnew->prstkptr);
 
 	/* Old process returns here when resumed */

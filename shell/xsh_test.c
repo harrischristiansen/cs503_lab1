@@ -78,24 +78,32 @@ shellcmd xsh_test(int nargs, char *args[])
 		if (args[1][0] == 't') {
 			sample_ts_test();
 		}
-		return;
+		return 0;
 	}
 	
-	if (nargs < 3) {
-		fprintf(stderr,"use is: %s [# CPU Processes] [# IO Processes]\n", args[0]);
+	if (nargs < 4) {
+		fprintf(stderr,"use is: %s [Scheduler Group] [# CPU Processes] [# IO Processes]\n", args[0]);
 		return 1;
 	}
 	
-	int num_cpu = atoi(args[1]);
-	int num_io = atoi(args[2]);
+	int sched_group = atoi(args[1]);
+	int num_cpu = atoi(args[2]);
+	int num_io = atoi(args[3]);
+	
+	if (sched_group != PROPORTIONALSHARE && sched_group != TSSCHED) {
+		fprintf(stderr,"use is: %s [Scheduler Group] [# CPU Processes] [# IO Processes]\n", args[0]);
+		return 1;
+	}
 	
 	int i;
+	resched_cntl(DEFER_START);
 	for (i = 0; i < num_cpu; i++) {
-		resume(create(process_cpu, 1024, TSSCHED, INITPRIO, "CPU-intense", 0, NULL));
+		resume(create(process_cpu, 1024, sched_group, INITPRIO, "CPU-intense", 0, NULL));
 	}
 	for (i = 0; i < num_io; i++) {
-		resume(create(process_io_multiple, 1024, TSSCHED, INITPRIO, "IO-intense", 0, NULL));
+		resume(create(process_io_multiple, 1024, sched_group, INITPRIO, "IO-intense", 0, NULL));
 	}
+	resched_cntl(DEFER_STOP);
 	
 	
     printf(" ===== Process Test Complete ===== \n");

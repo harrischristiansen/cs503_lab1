@@ -13,6 +13,7 @@ void	clkhandler()
 	/* Increment the process pr_cputime */
 	
 	proctab[currpid].pr_cputime++;
+	proctab[currpid].pr_cputimecurrent++;
 
 	/* Decrement the ms counter, and see if a second has passed */
 
