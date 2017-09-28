@@ -52,6 +52,29 @@ pid32	dequeue(
 }
 
 /*------------------------------------------------------------------------
+ *  dequeueofgroup  -  Remove and return the first process in group on a list
+ *------------------------------------------------------------------------
+ */
+pid32	dequeueofgroup(
+	  qid16		q,		/* ID queue to use		*/
+	  int32		group	/* Group type to get 			*/
+	)
+{
+	pid32	pid;			/* ID of process removed	*/
+
+	if (isbadqid(q) || (group != PROPORTIONALSHARE && group != TSSCHED)) {
+		return SYSERR;
+	} else if (isempty(q)) {
+		return EMPTY;
+	}
+
+	pid = getfirstofgroup(q, group);
+	queuetab[pid].qprev = EMPTY;
+	queuetab[pid].qnext = EMPTY;
+	return pid;
+}
+
+/*------------------------------------------------------------------------
  *  queue_count  -  Count number of *group* elements in queue
  *------------------------------------------------------------------------
  */
@@ -66,7 +89,7 @@ int32	queue_count(
 		return SYSERR;
 	}
 
-	qid16	curr;
+	pid32 curr;
 	curr = firstid(q);
 	while (queuetab[curr].qkey > MINKEY) {
 		if (!isbadpid(curr)) {

@@ -22,6 +22,35 @@ pid32	getfirst(
 }
 
 /*------------------------------------------------------------------------
+ *  getfirstofgroup  -  Remove a process in group from the front of a queue
+ *------------------------------------------------------------------------
+ */
+pid32	getfirstofgroup(
+	  qid16		q,		/* ID of queue from which to	*/
+	  int32		group	/* Group type to get 			*/
+	)
+{
+	pid32	curr;
+
+	if (isempty(q)) {
+		return EMPTY;
+	}
+
+	curr = queuehead(q);
+	while (queuetab[curr].qkey > MINKEY) {
+		if (!isbadpid(curr)) {
+			struct procent *pr = &proctab[curr];
+			if (pr->pr_group == group) {
+				break;
+			}
+		}
+		curr = queuetab[curr].qnext;
+	}
+	
+	return getitem(curr);
+}
+
+/*------------------------------------------------------------------------
  *  getlast  -  Remove a process from end of queue
  *------------------------------------------------------------------------
  */

@@ -104,6 +104,7 @@ extern	syscall	getc(did32);
 
 /* in file getitem.c */
 extern	pid32	getfirst(qid16);
+extern	pid32	getfirstofgroup(qid16, int32);
 extern	pid32	getlast(qid16);
 extern	pid32	getitem(pid32);
 
@@ -363,6 +364,7 @@ extern	int32	quark_irq_routing(void);
 /* in file queue.c */
 extern	pid32	enqueue(pid32, qid16);
 extern	pid32	dequeue(qid16);
+extern	pid32	dequeueofgroup(qid16, int32);
 extern	int32	queue_count(qid16, int32);
 
 /* in file ramclose.c */
