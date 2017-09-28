@@ -10,6 +10,9 @@ September 2017
 - Build: `make` in compile/ directory
 	- Clean: `make clean`
 	- Rebuild: `make rebuild`
+- Test: Tests are found in `shell/xsh_test.c`
+	- Spawn x CPU processes, y IO processes: `test x y`
+	- Perform provided sample timeshare scheduler test: `test t`
 
 ## Tasks
 - [ ] Aging Scheduler (20%)
