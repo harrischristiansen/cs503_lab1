@@ -11,8 +11,9 @@ September 2017
 	- Clean: `make clean`
 	- Rebuild: `make rebuild`
 - Test: Tests are found in `shell/xsh_test.c`
-	- Spawn x CPU processes, y IO processes: `test x y`
+	- Spawn x CPU processes, y IO processes, in group g (0 or 1): `test g x y`
 	- Perform provided sample timeshare scheduler test: `test t`
+	- Perform basic proportional share scheduler test: `test p`
 
 ## Tasks
 - [X] Aging Scheduler (20%)
