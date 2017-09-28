@@ -4,37 +4,68 @@
 #include <stdio.h>
 
 void process_cpu() {
-        int i, j;
-        int LOOP1 = 10; 
-        int LOOP2 = 10000000;
+    int i, j;
+    int LOOP1 = 10; 
+    int LOOP2 = 10000000;
+    
+    struct procent *pr = &proctab[currpid];
 
-        int v = 0;
-        for (i=0; i<LOOP1; i++) {
-            for (j=0; j<LOOP2; j++) { // CPU Intensive Loop
-                    v += i * j;
-            }   
-
-            kprintf("[CPU] PID: %d, Loop: %d \n", currpid, i);
+    int v = 0;
+    for (i=0; i<LOOP1; i++) {
+        for (j=0; j<LOOP2; j++) { // CPU Intensive Loop
+                v += i * j;
         }   
 
-        kprintf("===== CPU BOUNDED PID %d ends ===== \n", currpid);
+        kprintf("[CPU] PID: %d, Loop: %d, Class: %s, Priority: %d \n", currpid, i, pr->pr_class == PR_IO ? "IO":"CPU", pr->prprio);
+    }   
+
+    kprintf("===== CPU BOUNDED PID %d ends ===== \n", currpid);
 }
 
-void process_io() {
-        int i, j;
-        int LOOP1 = 10;
-        int LOOP2 = 12;
+void process_io_multiple() {
+    int i, j;
+    int LOOP1 = 10;
+    int LOOP2 = 12;
 
-        //struct procent *pr = &proctab[currpid];
+    struct procent *pr = &proctab[currpid];
 
-        for (i=0; i<LOOP1; i++) {
-            for (j=0; j<LOOP2; j++) { // IO Bound Loop
-                    sleepms(50);
-            } 
-            kprintf("[IO] PID: %d, Loop: %d\n", currpid, i);
-        }   
+    for (i=0; i<LOOP1; i++) {
+        for (j=0; j<LOOP2; j++) { // IO Bound Loop
+            sleepms(50);
+        } 
+        kprintf("[IO] PID: %d, Loop: %d, Class: %s, Priority: %d \n", currpid, i, pr->pr_class == PR_IO ? "IO":"CPU", pr->prprio);
+    }   
 
-        kprintf("===== IO BOUNDED PID %d ends ===== \n", currpid);
+    kprintf("===== IO BOUNDED PID %d ends ===== \n", currpid);
+}
+
+void process_io_single(uint32 time) {
+    int i;
+    int LOOP1 = 30; 
+
+    struct procent *pr = &proctab[currpid];
+
+    for (i=0; i<LOOP1; i++) {
+        sleepms(time);
+        kprintf("[IO] PID: %d, Loop: %d, Class: %s, Priority: %d \n", currpid, i, pr->pr_class == PR_IO ? "IO":"CPU", pr->prprio);
+    }   
+
+    kprintf("===== IO BOUNDED PID %d ends\n", currpid);
+}
+
+void sample_ts_test() {
+	kprintf("===TS TEST3===\n");
+	int i;
+	resched_cntl(DEFER_START);
+    for (i = 0; i < 6; i++) {
+        if (i % 2 == 0) {
+            resume(create(process_cpu, 1024, 20, "cpu-intense", 0));
+        }
+        else {
+            resume(create(process_io_single, 1024, 20, "io-intense", 1, 32));
+        }
+    }
+    resched_cntl(DEFER_STOP);
 }
 
 /*------------------------------------------------------------------------
@@ -43,6 +74,13 @@ void process_io() {
  */
 shellcmd xsh_test(int nargs, char *args[])
 {
+	if (nargs == 2) {
+		if (args[1][0] == 't') {
+			sample_ts_test();
+		}
+		return;
+	}
+	
 	if (nargs < 3) {
 		fprintf(stderr,"use is: %s [# CPU Processes] [# IO Processes]\n", args[0]);
 		return 1;
@@ -56,9 +94,10 @@ shellcmd xsh_test(int nargs, char *args[])
 		resume(create(process_cpu, 1024, INITPRIO, "CPU-intense", 0, NULL));
 	}
 	for (i = 0; i < num_io; i++) {
-		resume(create(process_io, 1024, INITPRIO, "IO-intense", 0, NULL));
+		resume(create(process_io_multiple, 1024, INITPRIO, "IO-intense", 0, NULL));
 	}
-
+	
+	
     printf(" ===== Process Test Complete ===== \n");
     return 0;
 }
