@@ -43,7 +43,6 @@ pid32	create(
 	prptr->pr_group = group;
 	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
 	prptr->prprio = priority;
-	prptr->pr_quantum = QUANTUM;
 	prptr->prstkbase = (char *)saddr;
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
