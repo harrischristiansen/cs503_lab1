@@ -50,3 +50,33 @@ pid32	dequeue(
 	queuetab[pid].qnext = EMPTY;
 	return pid;
 }
+
+/*------------------------------------------------------------------------
+ *  queue_count  -  Count number of *group* elements in queue
+ *------------------------------------------------------------------------
+ */
+int32	queue_count(
+	  qid16		q,		/* ID of queue to use		*/
+	  int32		group	/* Group which to count in queue	*/
+	)
+{
+	int32 count = 0;
+
+	if (group != PROPORTIONALSHARE && group != TSSCHED) {
+		return SYSERR;
+	}
+
+	qid16	curr;
+	curr = firstid(q);
+	while (queuetab[curr].qkey > MINKEY) {
+		if (!isbadpid(curr)) {
+			struct procent *pr = &proctab[curr];
+			if (pr->pr_group == group) {
+				count = count + 1;
+			}
+		}
+		curr = queuetab[curr].qnext;
+	}
+
+	return count;
+}
