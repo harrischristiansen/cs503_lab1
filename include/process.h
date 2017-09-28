@@ -17,6 +17,10 @@
 #define	PR_WAIT		6	/* Process is on semaphore queue	*/
 #define	PR_RECTIM	7	/* Process is receiving with timeout	*/
 
+/* Process Classification Constants */
+#define PR_CPU  0   /* CPU Bound */
+#define PR_IO   1   /* I/O Bound */
+
 /* Miscellaneous process definitions */
 
 #define	PNMLEN		16	/* Length of process "name"		*/
@@ -40,18 +44,23 @@
 
 /* Definition of the process table (multiple of 32 bits) */
 
-struct procent {		/* Entry in the process table		*/
-	uint16	prstate;	/* Process state: PR_CURR, etc.		*/
-	pri16	prprio;		/* Process priority			*/
-	char	*prstkptr;	/* Saved stack pointer			*/
-	char	*prstkbase;	/* Base of run time stack		*/
-	uint32	prstklen;	/* Stack length in bytes		*/
-	char	prname[PNMLEN];	/* Process name				*/
-	sid32	prsem;		/* Semaphore on which process waits	*/
-	pid32	prparent;	/* ID of the creating process		*/
-	umsg32	prmsg;		/* Message sent to this process		*/
-	bool8	prhasmsg;	/* Nonzero iff msg is valid		*/
+struct procent {		/* Entry in the process table			*/
+	uint16	prstate;	/* Process state: PR_CURR, etc.			*/
+	pri16	prprio;		/* Process priority						*/
+	char	*prstkptr;	/* Saved stack pointer					*/
+	char	*prstkbase;	/* Base of run time stack				*/
+	uint32	prstklen;	/* Stack length in bytes				*/
+	char	prname[PNMLEN];	/* Process name						*/
+	sid32	prsem;		/* Semaphore on which process waits		*/
+	pid32	prparent;	/* ID of the creating process			*/
+	umsg32	prmsg;		/* Message sent to this process			*/
+	bool8	prhasmsg;	/* Nonzero iff msg is valid				*/
 	int16	prdesc[NDESC];	/* Device descriptors for process	*/
+	
+	uint32  pr_cputime; /* Process total CPU time in ms       	*/
+	uint32  pr_tsready; /* Timestamp of last PR_READY   		*/
+	
+	bool8   pr_class;   /* CPU/IO Process Classification (0=CPU, 1=IO)    */
 };
 
 /* Marker for the top of a process stack (used to help detect overflow)	*/

@@ -22,6 +22,7 @@ status	ready(
 
 	prptr = &proctab[pid];
 	prptr->prstate = PR_READY;
+	prptr->pr_tsready = clktime;
 	insert(pid, readylist, prptr->prprio);
 	resched();
 
