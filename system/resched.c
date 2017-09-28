@@ -53,7 +53,6 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	/* Point to process table entry for the current (old) process */
 
 	ptold = &proctab[currpid];
-	kprintf("Completed Context of %s\n", ptold->prname);
 	
 	classifyProcess(ptold);
 	updateProcessPriority(ptold);
