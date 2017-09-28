@@ -88,11 +88,11 @@ int32	queue_count(
 	if (group != PROPORTIONALSHARE && group != TSSCHED) {
 		return SYSERR;
 	}
-
-	pid32 curr;
-	curr = firstid(q);
-	while (queuetab[curr].qkey > MINKEY) {
-		if (!isbadpid(curr)) {
+	
+	pid32 tail = queuetail(q);
+	pid32 curr = queuetab[queuehead(q)].qnext;
+	while (curr != tail) {
+		if (!isbadpid(curr) && curr != 0) {
 			struct procent *pr = &proctab[curr];
 			if (pr->pr_group == group) {
 				count = count + 1;

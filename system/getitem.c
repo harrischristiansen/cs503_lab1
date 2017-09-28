@@ -30,14 +30,13 @@ pid32	getfirstofgroup(
 	  int32		group	/* Group type to get 			*/
 	)
 {
-	pid32	curr;
-
 	if (isempty(q)) {
 		return EMPTY;
 	}
-
-	curr = queuehead(q);
-	while (queuetab[curr].qkey > MINKEY) {
+	
+	pid32 tail = queuetail(q);
+	pid32 curr = queuetab[queuehead(q)].qnext;
+	while (curr != tail) {
 		if (!isbadpid(curr)) {
 			struct procent *pr = &proctab[curr];
 			if (pr->pr_group == group) {

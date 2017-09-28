@@ -28,3 +28,12 @@ pri16	chgprio(
 	restore(mask);
 	return oldprio;
 }
+
+int32 highest_prgroup()
+{
+	int32 group = pr_group_priority[PROPORTIONALSHARE] >= pr_group_priority[TSSCHED] ? PROPORTIONALSHARE : TSSCHED;
+	if (queue_count(readylist, group) == 0) {
+		group = (group == PROPORTIONALSHARE) ? TSSCHED : PROPORTIONALSHARE;
+	}
+	return group;
+}

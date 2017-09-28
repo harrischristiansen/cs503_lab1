@@ -20,6 +20,7 @@ extern	pri16	chprio(pid32, pri16);
 
 /* in file chgprio.c */
 extern	pri16	chgprio(int32, pri16);
+extern	int32	highest_prgroup();
 
 /* in file clkupdate.S */
 extern	uint32	clkcount(void);

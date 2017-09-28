@@ -15,9 +15,9 @@ September 2017
 	- Perform provided sample timeshare scheduler test: `test t`
 
 ## Tasks
-- [ ] Aging Scheduler (20%)
+- [X] Aging Scheduler (20%)
 - [X] Proportional Share Scheduler (40%)
 - [X] Timeshare Scheduler (40%)
 - [X] System Call - create
 - [X] System Call - chgprio
-- [ ] System Call - resched
+- [X] System Call - resched

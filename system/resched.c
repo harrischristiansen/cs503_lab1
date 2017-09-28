@@ -4,6 +4,20 @@
 
 struct	defer	Defer;
 
+// ======================================== Process Groups ======================================== //
+
+void resetProcessGroupPriority(int32 group) {
+	chgprio(group, PR_GROUP_INITIAL);
+}
+
+void updateProcessGroupPriority() {
+	int32 numPS = queue_count(readylist, PROPORTIONALSHARE);
+	int32 numTS = queue_count(readylist, TSSCHED);
+	chgprio(PROPORTIONALSHARE, pr_group_priority[PROPORTIONALSHARE] + numPS);
+	chgprio(TSSCHED, pr_group_priority[TSSCHED] + numTS);
+	//kprintf("Updated PS by %d -> %d, TS by %d -> %d\n", numPS, pr_group_priority[PROPORTIONALSHARE], numTS, pr_group_priority[TSSCHED]);
+}
+
 // ======================================== Proportional Share Scheduler ======================================== //
 
 int32 calculatePi(int32 oldPi, int32 ticks, int32 valueRi)
@@ -112,6 +126,8 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 
 	ptold = &proctab[currpid];
 	
+	resetProcessGroupPriority(ptold->pr_group);
+	updateProcessGroupPriority();
 	if (ptold->pr_group == TSSCHED) {
 		classifyProcess(ptold);
 		updateTSProcessPriority(ptold);
@@ -120,7 +136,7 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	}
 
 	if (ptold->prstate == PR_CURR) {  /* Process remains eligible */
-		if (ptold->prprio > firstkey(readylist)) {
+		if (ptold->prprio > firstkey(readylist) && ptold->pr_group == highest_prgroup()) {
 			setScheduled(ptold); // TODO: Should this be reset here?
 			preempt = quantumForGroup(ptold); /* Reset time slice for process	*/
 			return;
@@ -134,7 +150,10 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	}
 
 	/* Force context switch to highest priority ready process */
-	currpid = dequeue(readylist);
+	currpid = dequeueofgroup(readylist, highest_prgroup());
+	if (currpid == EMPTY) {
+		currpid = dequeue(readylist);
+	}
 	ptnew = &proctab[currpid];
 	ptnew->prstate = PR_CURR;
 	setScheduled(ptnew);
