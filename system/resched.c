@@ -4,6 +4,24 @@
 
 struct	defer	Defer;
 
+bool8 classifyProcess(struct procent *prptr)
+{
+	// Determine Process Classification
+	bool8 oldClass = prptr->pr_class;
+	//if (prptr->prstate==PR_SLEEP || prptr->prstate==PR_RECV) {
+	//	prptr->pr_class = PR_IO;
+	//} else {
+	//	prptr->pr_class = PR_CPU;
+	//}
+	if (preempt == QUANTUM) { // Process used all available time
+		prptr->pr_class = PR_CPU;
+	} else {
+		prptr->pr_class = PR_IO;
+	}
+	
+	return oldClass;
+}
+
 /*------------------------------------------------------------------------
  *  resched  -  Reschedule processor to highest priority eligible process
  *------------------------------------------------------------------------
@@ -23,6 +41,8 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	/* Point to process table entry for the current (old) process */
 
 	ptold = &proctab[currpid];
+	
+	classifyProcess(ptold);
 
 	if (ptold->prstate == PR_CURR) {  /* Process remains eligible */
 		if (ptold->prprio > firstkey(readylist)) {
@@ -32,6 +52,7 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 		/* Old process will no longer remain current */
 
 		ptold->prstate = PR_READY;
+		ptold->pr_tsready = clktime;
 		insert(currpid, readylist, ptold->prprio);
 	}
 
