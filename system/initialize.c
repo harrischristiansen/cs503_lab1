@@ -186,6 +186,7 @@ static	void	sysinit()
 		prptr->prname[0] = NULLCH;
 		prptr->prstkbase = NULL;
 		prptr->prprio = 0;
+		prptr->pr_quantum = QUANTUM;
 		prptr->pr_cputime = 0;
 	}
 
@@ -193,7 +194,8 @@ static	void	sysinit()
 
 	prptr = &proctab[NULLPROC];
 	prptr->prstate = PR_CURR;
-	prptr->prprio = 0;
+	prptr->prprio = -1;
+	prptr->pr_quantum = QUANTUM;
 	strncpy(prptr->prname, "prnull", 7);
 	prptr->prstkbase = getstk(NULLSTK);
 	prptr->prstklen = NULLSTK;

@@ -4,6 +4,10 @@
 
 struct	defer	Defer;
 
+const int32 QUANTUM_FOR_LEVEL[] = {200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 20};
+const int32 NEXT_CPU_PRIORITY_FOR_PRIOITY[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49};
+const int32 NEXT_IO_PRIORITY_FOR_PRIOITY[] = {50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 53, 53, 53, 53, 53, 54, 54, 54, 54, 54, 55, 55, 55, 55, 55, 56, 57, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 59};
+
 bool8 classifyProcess(struct procent *prptr)
 {
 	// Determine Process Classification
@@ -15,6 +19,19 @@ bool8 classifyProcess(struct procent *prptr)
 	}
 	
 	return oldClass;
+}
+
+void updateProcessPriority(struct procent *prptr)
+{
+	if (prptr == &proctab[NULLPROC]) {
+		return;
+	}
+	
+	if (prptr->pr_class == PR_IO) { // Determine next priority
+		prptr->prprio = NEXT_IO_PRIORITY_FOR_PRIOITY[prptr->prprio];
+	} else {
+		prptr->prprio = NEXT_CPU_PRIORITY_FOR_PRIOITY[prptr->prprio];
+	}
 }
 
 /*------------------------------------------------------------------------
@@ -36,8 +53,10 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	/* Point to process table entry for the current (old) process */
 
 	ptold = &proctab[currpid];
+	kprintf("Completed Context of %s\n", ptold->prname);
 	
 	classifyProcess(ptold);
+	updateProcessPriority(ptold);
 
 	if (ptold->prstate == PR_CURR) {  /* Process remains eligible */
 		if (ptold->prprio > firstkey(readylist)) {
@@ -56,7 +75,7 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	currpid = dequeue(readylist);
 	ptnew = &proctab[currpid];
 	ptnew->prstate = PR_CURR;
-	preempt = QUANTUM;		/* Reset time slice for process	*/
+	preempt = QUANTUM_FOR_LEVEL[ptnew->prprio];		/* Reset time slice for process	*/
 	ctxsw(&ptold->prstkptr, &ptnew->prstkptr);
 
 	/* Old process returns here when resumed */
