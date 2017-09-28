@@ -25,7 +25,9 @@ void updatePSProcessPriority(struct procent *prptr)
 	if (prptr == &proctab[NULLPROC]) {
 		return;
 	}
+	//kprintf("Updating Priority(%d, %d, %d) ", prptr->pr_pi, prptr->pr_cputimecurrent, prptr->pr_ri);
 	prptr->pr_pi = calculatePi(prptr->pr_pi, prptr->pr_cputimecurrent, prptr->pr_ri);
+	//kprintf("to %d\n", prptr->pr_pi);
 	prptr->prprio = calculatePRIOi(prptr->pr_pi);
 }
 
@@ -84,6 +86,12 @@ int32 quantumForGroup(struct procent *prptr)
 	}
 }
 
+void setScheduled(struct procent *prptr)
+{
+	prptr->pr_cputimecurrent = 0;
+	prptr->pr_tsscheduled = clktime;
+}
+
 /*------------------------------------------------------------------------
  *  resched  -  Reschedule processor to highest priority eligible process
  *------------------------------------------------------------------------
@@ -113,6 +121,7 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 
 	if (ptold->prstate == PR_CURR) {  /* Process remains eligible */
 		if (ptold->prprio > firstkey(readylist)) {
+			setScheduled(ptold); // TODO: Should this be reset here?
 			preempt = quantumForGroup(ptold); /* Reset time slice for process	*/
 			return;
 		}
@@ -128,10 +137,9 @@ void	resched(void)		/* Assumes interrupts are disabled	*/
 	currpid = dequeue(readylist);
 	ptnew = &proctab[currpid];
 	ptnew->prstate = PR_CURR;
-	ptnew->pr_cputimecurrent = 0;
-	ptnew->pr_tsscheduled = clktime;
+	setScheduled(ptnew);
 	preempt = quantumForGroup(ptnew); /* Reset time slice for process	*/
-	ptnew->pr_pi = validate_pi(ptnew->pr_pi);
+	ptnew->pr_pi = validate_pi(ptnew->pr_pi); // Validate Pi Value when first scheduled
 	ctxsw(&ptold->prstkptr, &ptnew->prstkptr);
 
 	/* Old process returns here when resumed */

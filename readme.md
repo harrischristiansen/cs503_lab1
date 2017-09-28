@@ -16,7 +16,7 @@ September 2017
 
 ## Tasks
 - [ ] Aging Scheduler (20%)
-- [ ] Proportional Share Scheduler (40%)
+- [X] Proportional Share Scheduler (40%)
 - [X] Timeshare Scheduler (40%)
 - [X] System Call - create
 - [ ] System Call - chgprio

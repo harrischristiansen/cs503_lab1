@@ -44,9 +44,9 @@ pid32	create(
 	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
 	if (group == PROPORTIONALSHARE) {
 		prptr->pr_ri = priority;
-		if (priority > 100) {
+		if (prptr->pr_ri > 100) {
 			prptr->pr_ri = 100;
-		} else if (priority < 0) {
+		} else if (prptr->pr_ri < 0) {
 			prptr->pr_ri = 0;
 		}
 		prptr->prprio = 2147483646;

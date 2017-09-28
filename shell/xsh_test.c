@@ -3,7 +3,7 @@
 #include <xinu.h>
 #include <stdio.h>
 
-void process_cpu() {
+void process_cpu(int32 respawnCount) {
     int i, j;
     int LOOP1 = 10; 
     int LOOP2 = 10000000;
@@ -17,6 +17,11 @@ void process_cpu() {
         }   
 
         kprintf("[CPU] PID: %d, Loop: %d, Class: %s, Priority: %d \n", currpid, i, pr->pr_class == PR_IO ? "IO":"CPU", pr->prprio);
+        
+        if (respawnCount > 0 && i > LOOP1/2) { // Handle Respawn
+	        resume(create(process_cpu, 1024, pr->pr_group, 20, "cpu-intense", 1, respawnCount - 1));
+	        respawnCount = 0;
+        }
     }   
 
     kprintf("===== CPU BOUNDED PID %d ends ===== \n", currpid);
@@ -59,12 +64,21 @@ void sample_ts_test() {
 	resched_cntl(DEFER_START);
     for (i = 0; i < 6; i++) {
         if (i % 2 == 0) {
-            resume(create(process_cpu, 1024, TSSCHED, 20, "cpu-intense", 0));
+            resume(create(process_cpu, 1024, TSSCHED, 20, "cpu-intense", 1, 0));
         }
         else {
             resume(create(process_io_single, 1024, TSSCHED, 20, "io-intense", 1, 32));
         }
     }
+    resched_cntl(DEFER_STOP);
+}
+
+void basic_ps_test() {
+	kprintf("===Basic PS Test===\n");
+	resched_cntl(DEFER_START);
+	resume(create(process_cpu, 1024, PROPORTIONALSHARE, 20, "cpu-intense", 1, 0));
+	resume(create(process_cpu, 1024, PROPORTIONALSHARE, 20, "cpu-intense", 1, 0));
+	resume(create(process_cpu, 1024, PROPORTIONALSHARE, 20, "cpu-intense", 1, 1));
     resched_cntl(DEFER_STOP);
 }
 
@@ -77,6 +91,8 @@ shellcmd xsh_test(int nargs, char *args[])
 	if (nargs == 2) {
 		if (args[1][0] == 't') {
 			sample_ts_test();
+		} else if (args[1][0] == 'p') {
+			basic_ps_test();
 		}
 		return 0;
 	}
@@ -98,7 +114,7 @@ shellcmd xsh_test(int nargs, char *args[])
 	int i;
 	resched_cntl(DEFER_START);
 	for (i = 0; i < num_cpu; i++) {
-		resume(create(process_cpu, 1024, sched_group, INITPRIO, "CPU-intense", 0, NULL));
+		resume(create(process_cpu, 1024, sched_group, INITPRIO, "CPU-intense", 1, 0));
 	}
 	for (i = 0; i < num_io; i++) {
 		resume(create(process_io_multiple, 1024, sched_group, INITPRIO, "IO-intense", 0, NULL));
